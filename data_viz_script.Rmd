@@ -1,0 +1,726 @@
+---
+title: "Data Vizualization"
+knit: (function(input_file, encoding) {
+  out_dir <- 'output_script';
+  rmarkdown::render(input_file,
+ encoding=encoding,
+ output_file=file.path(dirname(input_file), out_dir, 'index.html'))})
+author: "por [Andre Peralta-santos](https://www.aperaltasantos.com/) - `r format(Sys.time(), '%d %B %Y')`"
+mail: "andre.peralta.santos@gmail.com"
+linkedin: "aperaltasantos"
+twitter: "andre_peralta"
+github: "aperaltasantos"
+home: "https://www.aperaltasantos.com/"
+output:
+  epuRate::epurate:
+    toc: TRUE
+    number_sections: FALSE
+    code_folding: "hide"
+---
+
+Disclaimer: Not for Public use
+
+# Inspiration
+https://www.r-graph-gallery.com/index.html 
+
+
+
+# Setup
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  collapse    = TRUE,
+  warning     = FALSE, # Whether to display warnings
+  message     = FALSE, # Whether to display messages
+  echo        = TRUE,  # In this case we want to see the code 
+  eval        = TRUE   # Whether to evaluate the code and include its results
+  )
+
+set.seed(1)       # Set the seed is important for getting reproducible reports 
+options(scipen=2) # set the decimals 
+```
+
+#Load libraries
+```{r}
+# Install if needed
+#install.packages("tidyverse")
+#install.packages("readr")
+#install.packages("here")
+
+library(tidyverse) # Versatile package for data analysis
+library(readr) # read csv files
+library(here) #easier to deal with relative paths 
+library(ggthemes) # Themes for ggplot
+library(directlabels) # Not sure, google it
+library(ggrepel) # Add labels to plots
+```
+
+# Load Dataset
+```{r}
+net_migration_map <- readRDS("datasets/net_migration_map.rds")
+region.lab.data <- readRDS("datasets/region.lab.data.rds")
+```
+
+# Mapas
+```{r}
+
+map_net_migration <- ggplot() + 
+
+  geom_polygon(                                          # make a polygon
+    data = net_migration_map,                                    # data frame
+    aes(x = long, 
+        y = lat, 
+        group = group,          # coordinates, and group them by polygons
+        fill = cat_mig),
+    alpha=0.6
+    ) 
+
+map_net_migration
+```
+
+```{r}
+map_net_migration  + 
+
+  geom_polygon(                                          # make a polygon
+    data = net_migration_map,                                    # data frame
+    aes(x = long, 
+        y = lat, 
+        group = group,          # coordinates, and group them by polygons
+        fill = cat_mig),
+    alpha=0.6
+    ) + 
+
+labs(title = "Net migration from 2013 to 2017",
+     subtitle = " WHO Eastern Mediterranean Region",
+     fill = "Net migration (thousands)", 
+     caption = "Source: World Bank. Net migration is the net total of migrants during the period, less the annual number of emigrants, \n including both citizens and noncitizens. Data are five-year estimates. k- Thousands, m - Millions") +
+  
+  theme_map() 
+  
+
+```
+
+```{r}
+
+map_net_migration  + 
+
+  geom_polygon(                                          # make a polygon
+    data = net_migration_map,                                    # data frame
+    aes(x = long, 
+        y = lat, 
+        group = group,          
+        fill = cat_mig),
+    alpha=0.6
+    ) + 
+
+labs(title = "Net migration from 2013 to 2017",
+     subtitle = " WHO Eastern Mediterranean Region",
+     fill = "Net migration (thousands)", 
+     caption = "Source: World Bank. Net migration is the net total of migrants during the period, less the annual number of emigrants, \n including both citizens and noncitizens. Data are five-year estimates. k- Thousands, m - Millions") +
+  
+  theme_map() +
+  
+  theme(plot.title=element_text( face="bold", 
+                                 hjust=0.5,
+                                 lineheight=1.2),
+        plot.subtitle=element_text(hjust=0.5),
+        legend.position = "bottom",
+    panel.border = element_blank()
+  )  +
+  
+  scale_fill_manual (
+    values = c("#d7191c", "#fdae61", "#ffffbf", "#a6d96a", "#1a9641"),
+    na.value = "gray55",
+    name = "Net migration",
+          guide = guide_legend(
+            direction = "horizontal",
+            keyheight = unit(2, units = "mm"),
+            keywidth = unit(8, units = "mm"),
+            title.position = 'top',
+            # I shift the labels around, the should be placed 
+            # exactly at the right end of each legend key
+            title.hjust = 0.5,
+            label.hjust = 1,
+            nrow = 1,
+            byrow = T,
+            # also the guide needs to be reversed
+            reverse = F,
+            label.position = "bottom"
+          )
+  )
+
+```
+
+
+```{r}
+
+map_net_migration <- ggplot() + 
+
+  geom_polygon(                                          # make a polygon
+    data = net_migration_map,                                    # data frame
+    aes(x = long, 
+        y = lat, 
+        group = group,          # coordinates, and group them by polygons
+        fill = cat_mig),
+    alpha=0.6
+    ) + 
+
+  
+  geom_path(data = net_migration_map, 
+            aes(x = long, 
+                y = lat, 
+                group = group), 
+            color = "black", 
+            size = 0.1) +
+
+labs(title = "Net migration from 2013 to 2017",
+     subtitle = " WHO Eastern Mediterranean Region",
+     fill = "Net migration (thousands)", 
+     caption = "Source: World Bank. Net migration is the net total of migrants during the period, less the annual number of emigrants, \n including both citizens and noncitizens. Data are five-year estimates. k- Thousands, m - Millions") +
+  
+  theme_map() +
+  
+  theme(plot.title=element_text( face="bold", 
+                                 hjust=0.5,
+                                 lineheight=1.2),
+        plot.subtitle=element_text(hjust=0.5),
+        legend.position = "bottom",
+    panel.border = element_blank()
+  )  +
+  
+  scale_fill_manual (
+    values = c("#d7191c", "#fdae61", "#ffffbf", "#a6d96a", "#1a9641"),
+    na.value = "gray55",
+    name = "Net migration",
+          guide = guide_legend(
+            direction = "horizontal",
+            keyheight = unit(2, units = "mm"),
+            keywidth = unit(8, units = "mm"),
+            title.position = 'top',
+            # I shift the labels around, the should be placed 
+            # exactly at the right end of each legend key
+            title.hjust = 0.5,
+            label.hjust = 1,
+            nrow = 1,
+            byrow = T,
+            # also the guide needs to be reversed
+            reverse = F,
+            label.position = "bottom"
+          )
+  )
+
+           
+map_net_migration
+
+
+```
+
+
+```{r}
+
+map_net_migration <- ggplot() + 
+
+  geom_polygon(                                          # make a polygon
+    data = net_migration_map,                                    # data frame
+    aes(x = long, 
+        y = lat, 
+        group = group,          # coordinates, and group them by polygons
+        fill = cat_mig),
+    alpha=0.6
+    ) + 
+  
+  geom_text(data = region.lab.data,                                    # data frame
+    aes(x = long, 
+        y = lat, 
+        label = region), 
+            size = 2.5,
+            hjust = 0.1,
+    check_overlap = TRUE) +
+  
+  geom_path(data = net_migration_map, 
+            aes(x = long, 
+                y = lat, 
+                group = group), 
+            color = "black", 
+            size = 0.1) +
+
+labs(title = "Net migration from 2013 to 2017",
+     subtitle = " WHO Eastern Mediterranean Region",
+     fill = "Net migration (thousands)", 
+     caption = "Source: World Bank. Net migration is the net total of migrants during the period, less the annual number of emigrants, \n including both citizens and noncitizens. Data are five-year estimates. k- Thousands, m - Millions") +
+  
+  theme_map() +
+  
+  theme(plot.title=element_text( face="bold", 
+                                 hjust=0.5,
+                                 lineheight=1.2),
+        plot.subtitle=element_text(hjust=0.5),
+        legend.position = "bottom",
+    panel.border = element_blank()
+  )  +
+  
+  scale_fill_manual (
+    values = c("#d7191c", "#fdae61", "#ffffbf", "#a6d96a", "#1a9641"),
+    na.value = "gray55",
+    name = "Net migration",
+          guide = guide_legend(
+            direction = "horizontal",
+            keyheight = unit(2, units = "mm"),
+            keywidth = unit(8, units = "mm"),
+            title.position = 'top',
+            # I shift the labels around, the should be placed 
+            # exactly at the right end of each legend key
+            title.hjust = 0.5,
+            label.hjust = 1,
+            nrow = 1,
+            byrow = T,
+            # also the guide needs to be reversed
+            reverse = F,
+            label.position = "bottom"
+          )
+  )
+
+
+ggsave( here::here("figures", 
+                   "map_net_migration.png"), 
+        dpi = "retina",
+        width =15,            
+        height = 10,          
+        units = c("cm"),      
+        )
+
+```
+
+
+# Mapa de Lisboa 
+```{r}
+library(osmdata)
+
+available_tags("highway")
+available_features()
+```
+
+
+```{r}
+getbb("Lisboa Portugal") # the coordinates of the city, save them 
+
+
+streets <- getbb("Lisboa Portugal")%>%
+  opq()%>%
+  add_osm_feature(key = "highway", 
+                  value = c( "primary", 
+                            "secondary", "tertiary")) %>%
+  osmdata_sf()
+
+
+
+small_streets <- getbb("Lisboa Portugal")%>%
+  opq()%>%
+  add_osm_feature(key = "highway", 
+                  value = c("residential")) %>%
+  osmdata_sf()
+
+```
+
+
+```{r}
+####
+ggplot() +
+  geom_sf(data = streets$osm_lines,
+          inherit.aes = FALSE,
+          color = "black",
+          size = .4,
+          alpha = .8) +
+  geom_sf(data = small_streets$osm_lines,
+          inherit.aes = FALSE,
+          color = "black",
+          size = .1,
+          alpha = .2) +
+
+  coord_sf(xlim = c(-9.296592, -8.976592), # Change the coordinates to your city 
+           ylim = c(38.547751, 38.867751), # Change the coordinates to your city 
+           expand = FALSE) +
+  
+  theme_void() 
+
+
+
+ggsave( here::here("figures", 
+                   "lisbon_map_white.png"), 
+        dpi = "retina",
+        width =15,            
+        height = 10,          
+        units = c("cm"),      
+        )
+```
+
+# Line plots
+
+```{r}
+indicators <- read_csv("datasets/indicators.csv")
+
+
+```
+
+```{r}
+indicators_sum <- indicators %>%
+  filter( location_name %in% c("Afghanistan", 
+                        "Bahrain", 
+                        "Djibouti", 
+                        "Egypt", 
+                        "Iraq", 
+                        "Iran",
+                        "Jordan",
+                        "Kuwait",
+                        "Lebanon",
+                        "Libya",
+                        "Morocco",
+                        "Oman",
+                        "Pakistan",
+                        "Palestine",
+                        "Qatar",
+                        "Saudi Arabia",
+                        "Somalia",
+                        "Sudan",
+                        "Syria",
+                        "Tunisia",
+                        "United Arab Emirates",
+                        "Yemen"
+                        ),
+         indicator_short=="Skilled Birth Attend",
+         year_id<2019) 
+
+indicators_sum <- indicators_sum %>%
+  group_by(year_id) %>%
+  mutate(WHO_EMR = mean(unscaled_value))
+    
+    
+indicators_sum <- indicators_sum %>%    
+    filter( location_name %in% c("Afghanistan", 
+                        "Iraq", 
+                        "Libya",
+                        "Palestine",
+                        "Somalia",
+                        "Syria",
+                        "Yemen",
+                        "Sudan"
+                        )
+    ) %>%
+  mutate(type = case_when( 
+    location_name == "Afghanistan" ~ 0,
+    location_name == "Iraq" ~ 1,
+    location_name == "Libya" ~ 1,
+    location_name == "Palestine" ~ 1,
+    location_name == "Somalia" ~ 0,
+    location_name == "Syria" ~ 1,
+    location_name == "Yemen" ~ 0,
+    location_name == "Sudan" ~ 0,
+    ) )
+```
+
+
+```{r}
+
+
+plot.fit <- ggplot() +
+  
+      geom_line(data = indicators_sum,                 
+               aes(x=year_id,               
+                   y = unscaled_value,
+                   group = location_name,
+                   colour = factor(location_name)
+#                   size=1 
+               ), size=1 ) 
+plot.fit 
+
+
+```
+
+```{r}
+
+plot.fit <- ggplot() +
+  
+      geom_line(data = indicators_sum,                 
+               aes(x=year_id,               
+                   y = unscaled_value,
+                   group = location_name,
+                   colour = factor(location_name)
+#                   size=1 
+               ), size=1 ) +
+  
+  scale_x_continuous(name="Year", limits=c(1990, 2020)) +
+  
+  labs(title = "Skilled birth attendance (%)",
+     subtitle = "8 WHO Eastern Mediterranean Region states, 1990-2017",
+     y = "Skilled birth attendance (%)",
+     x = "Year", 
+     fill = "States", 
+     caption = "Source: IHME") 
+
+plot.fit
+
+```
+
+```{r}
+
+plot.fit  +
+
+  geom_vline(xintercept=1990,  color = "black") +
+  
+  theme_minimal() +
+  theme(panel.grid.minor = element_blank(),
+        panel.grid.major.y = element_blank(),
+        axis.text = element_text(face = "bold", size = 8, color = "black"),
+        axis.title = element_text(size = 10),
+        plot.title = element_text(face = "bold", size = 12),
+        legend.position = "none" # Play with it
+        ) 
+
+```
+
+```{r}
+
+plot.fit  +
+        geom_line(data = indicators_sum,                
+               aes(x=year_id,                
+                   y = WHO_EMR),
+                   size=1,
+               color="#ef6548",
+               linetype = "dashed") + 
+  
+    geom_vline(xintercept=1990,  color = "black") +
+  
+  theme_minimal() +
+  theme(panel.grid.minor = element_blank(),
+        panel.grid.major.y = element_blank(),
+        axis.text = element_text(face = "bold", size = 8, color = "black"),
+        axis.title = element_text(size = 10),
+        plot.title = element_text(face = "bold", size = 12),
+        legend.position = "none" # Play with it
+        ) 
+
+
+```
+
+
+```{r}
+
+plot.fit <- ggplot() +
+  
+      geom_line(data = indicators_sum,                 
+               aes(x=year_id,               
+                   y = unscaled_value,
+                   group = location_name,
+                   colour = factor(location_name)
+#                   size=1 
+               ), size=1 ) +
+  
+        geom_line(data = indicators_sum,                
+               aes(x=year_id,                
+                   y = WHO_EMR),
+                   size=1,
+               color="#ef6548",
+               linetype = "dashed") +
+  
+      geom_text_repel(data  = subset(indicators_sum, 
+                                    year_id == 2018),
+                               aes(x=year_id,               
+                   y = unscaled_value,
+                       label = location_name),
+                    nudge_x = 2,
+                    size=3,
+#                  box.padding   = 0.35, 
+#                  point.padding = 0.5,
+                  segment.color = 'grey50') +
+  
+  scale_x_continuous(name="Year", limits=c(1990, 2020)) +
+  
+  labs(title = "Skilled birth attendance (%)",
+     subtitle = "8 WHO Eastern Mediterranean Region states, 1990-2017",
+     y = "Skilled birth attendance (%)",
+     x = "Year", 
+     fill = "States", 
+     caption = "Source: IHME") +
+  
+  annotate(
+    geom = "curve", 
+    x = 2002, 
+    y = 	58, 
+    xend = 2004, 
+    yend = 	60, 
+    curvature = .3, 
+    arrow = arrow(length = unit(2, "mm"))) +
+  annotate(geom = "text", 
+           x = 2000, 
+           y = 60, 
+           label = "Iraq conflict", 
+           hjust = "left",
+           size=3) + 
+  annotate(
+    geom = "curve", 
+    x = 1998, 
+    y = 	82, 
+    xend = 1995, 
+    yend = 	82, 
+    curvature = .3, 
+    arrow = arrow(length = unit(2, "mm"))) +
+  
+    annotate(geom = "text", 
+           x = 1996, 
+           y = 80, 
+           label = "Palestine conflict", 
+           hjust = "left",
+           size=3)  +
+  
+      annotate(geom = "text", 
+           x = 2014, 
+           y = 86.5, 
+           label = "WHO-EMR", 
+           hjust = "left",
+           size=2.8)  +
+  
+  
+  geom_vline(xintercept=1990,  color = "black") +
+  
+  theme_minimal() +
+  theme(panel.grid.minor = element_blank(),
+        panel.grid.major.y = element_blank(),
+        axis.text = element_text(face = "bold", size = 8, color = "black"),
+        axis.title = element_text(size = 10),
+        plot.title = element_text(face = "bold", size = 12),
+        legend.position = "none"
+        ) 
+
+plot.fit 
+
+
+
+ggsave( here::here("figures", 
+                   "skills_rate.png"), 
+        dpi = "retina",
+        width =16,            
+        height = 10,          
+        units = c("cm"),      
+        )
+
+```
+
+
+# Area Chart
+```{r}
+who_conflict <- read_csv("datasets/who_conflict.csv")
+```
+
+
+```{r}
+who_conflict <- who_conflict %>%
+  filter(metric_name=="Number")
+
+who_conflict <- who_conflict %>%
+  group_by(year) %>%
+  mutate(sum_deaths= sum(val),
+         percent=(val/sum_deaths)*100
+         )
+```
+
+```{r}
+library(viridis)
+cbp1 <- c("#eff3ff", "#fb6a4a", "#bdd7e7", "#6baed6",
+          "#3182bd", "grey")
+
+
+who_conflict %>% 
+  ggplot( aes(x=year, 
+              y=percent, 
+              fill=location_name)
+          ) +
+    geom_area( )  
+```
+
+```{r}
+library(viridis)
+cbp1 <- c("#eff3ff", "#fb6a4a", "#bdd7e7", "#6baed6",
+          "#3182bd", "grey")
+
+
+who_conflict %>% 
+  ggplot( aes(x=year, 
+              y=percent, 
+              fill=location_name)
+          ) +
+  
+    geom_area()  + 
+  
+  scale_fill_manual(values=cbp1) +
+  
+  labs(title = "Percent of total deaths by year from war and terrorism from 1990 - 2017",
+       subtitle = "World Health Organization regions",
+       y = "Percent of total deaths from war and terrorism",
+       x = "Year", 
+       fill = "", 
+       caption = "Source: IHME") 
+```
+
+```{r}
+library(viridis)
+cbp1 <- c("#eff3ff", "#fb6a4a", "#bdd7e7", "#6baed6",
+          "#3182bd", "grey")
+
+
+who_conflict %>% 
+  ggplot( aes(x=year, 
+              y=percent, 
+              fill=location_name)
+          ) +
+  
+    geom_area()  + 
+  
+  scale_fill_manual(values=cbp1) +
+  
+  labs(title = "Percent of total deaths by year from war and terrorism from 1990 - 2017",
+       subtitle = "World Health Organization regions",
+       y = "Percent of total deaths from war and terrorism",
+       x = "Year", 
+       fill = "", 
+       caption = "Source: IHME") +
+  
+    annotate("text", 
+           x = 2012, 
+           y = 40, 
+           label = "Eastern Mediterranean Region ", 
+           color = "black", 
+           size=3) +
+  
+    annotate("text", 
+           x = 1998, 
+           y = 75, 
+           label = "African Region", 
+           color = "black", 
+           size=3) +
+  
+      annotate("text", 
+           x = 2005, 
+           y = 10, 
+           label = "South-East Asia Region", 
+           color = "black", 
+           size=3) +
+
+  theme_minimal() +
+  
+  theme(panel.grid.minor = element_blank(),
+        panel.grid.major.y = element_blank(),
+        axis.text = element_text(face = "bold", size = 8, color = "black"),
+        axis.title = element_text(size = 10),
+        plot.title = element_text(face = "bold", size = 12),
+        legend.position = "bottom"
+        ) 
+
+ggsave( here::here("figures", 
+                   "area_chart.png"), 
+        dpi = "retina",
+        width =16,            
+        height = 12,          
+        units = c("cm"),      
+        )
+
+```
+
